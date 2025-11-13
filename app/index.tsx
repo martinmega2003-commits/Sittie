@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import MapView, { Marker } from 'react-native-maps';
+import SunCalc from 'suncalc';
 
 
 
@@ -92,6 +93,43 @@ setRegioncam({ latitude: midLat, longitude: midLon,   latitudeDelta: Math.abs(la
 } 
 
 
+function computeBearing(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const toDeg = (rad: number) => (rad * 180) / Math.PI;
+
+  const phi1 = toRad(lat1);
+  const phi2 = toRad(lat2);
+  const deltaLambda = toRad(lon2 - lon1);
+
+  const y = Math.sin(deltaLambda) * Math.cos(phi2);
+  const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+  const theta = Math.atan2(y, x);
+
+  return (toDeg(theta) + 360) % 360;
+}
+
+  const bearing =
+    markerCoord && markerCoord1
+      ? computeBearing(
+          markerCoord.latitude,
+          markerCoord.longitude,
+          markerCoord1.latitude,
+          markerCoord1.longitude,
+        )
+      : null;
+
+  const sunAzimuth =
+    markerCoord && markerCoord1
+      ? computeSunAzimuth(
+          (markerCoord.latitude + markerCoord1.latitude) / 2,
+          (markerCoord.longitude + markerCoord1.longitude) / 2,
+        )
+      : null;
+
+  const sunDelta =
+    bearing !== null && sunAzimuth !== null
+      ? ((sunAzimuth - bearing + 540) % 360) - 180
+      : null;
 
   return (
     <View style={styles.container}>
@@ -100,7 +138,7 @@ setRegioncam({ latitude: midLat, longitude: midLon,   latitudeDelta: Math.abs(la
    <TextInput
           value={Startquery}
           onChangeText={setStartQuery}
-          placeholder="Zadej adresu nebo město"
+          placeholder="Start"
           placeholderTextColor="#8c929b"
           style={styles.input}
         />
@@ -108,7 +146,7 @@ setRegioncam({ latitude: midLat, longitude: midLon,   latitudeDelta: Math.abs(la
          <TextInput
           value={Endquery}
           onChangeText={setEndQuery}
-          placeholder="Zadej adresu nebo město"
+          placeholder="Cíl"
           placeholderTextColor="#8c929b"
           style={styles.input}
         />
@@ -130,9 +168,23 @@ setRegioncam({ latitude: midLat, longitude: midLon,   latitudeDelta: Math.abs(la
       <Marker coordinate={markerCoord1} title="Cíl" />
     )}
 </MapView>
+{bearing !== null && (
+  <Text style={styles.bearingText}>Směr trasy: {bearing.toFixed(2)}°</Text>
+)}
+{sunDelta !== null && (
+  <Text style={styles.bearingText}>
+    Slunce je {sunDelta > 0 ? 'nalevo' : 'napravo'} ({Math.abs(sunDelta).toFixed(0)}°)
+  </Text>
+)}
       </View>
     </View>
   );
+}
+
+function computeSunAzimuth(lat: number, lon: number) {
+  const position = SunCalc.getPosition(new Date(), lat, lon);
+  const azimuthDeg = ((position.azimuth * 180) / Math.PI + 180) % 360;
+  return azimuthDeg;
 }
 
 const styles = StyleSheet.create({
@@ -191,5 +243,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+  },
+  bearingText: {
+    marginTop: 12,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
   },
 });
