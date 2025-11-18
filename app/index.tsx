@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-
 import * as Location from 'expo-location';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import SunCalc from 'suncalc';
 
@@ -274,20 +273,27 @@ export default function Index() {
           (markerCoord.longitude + markerCoord1.longitude) / 2,
         )
       : null;
-
+      
   const sunDelta =
     bearing !== null && sunAzimuth !== null
       ? ((sunAzimuth - bearing + 540) % 360) - 180
       : null;
 
-const dayNightCoords =
-  markerCoord && markerCoord1
-    ? {
-        latitude: (markerCoord.latitude + markerCoord1.latitude) / 2,
-        longitude: (markerCoord.longitude + markerCoord1.longitude) / 2,
-      }
-    : regioncam;
-    
+
+  const isDay = useMemo(() => {
+    const coords =
+      markerCoord && markerCoord1
+        ? {
+            latitude: (markerCoord.latitude + markerCoord1.latitude) / 2,
+            longitude: (markerCoord.longitude + markerCoord1.longitude) / 2,
+          }
+        : regioncam;
+
+    const times = SunCalc.getTimes(new Date(), coords.latitude, coords.longitude);
+    const now = new Date();
+    return now >= times.sunrise && now < times.sunset;
+  }, [markerCoord, markerCoord1, regioncam]);
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -391,6 +397,9 @@ const dayNightCoords =
             {Math.abs(sunDelta).toFixed(0)}°)
           </Text>
         )}
+      <Text style={styles.bearingText}>
+        Je {isDay ? 'den' : 'noc'}
+      </Text>
       </View>
     </View>
   );
