@@ -2,7 +2,7 @@ import * as Location from 'expo-location';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import SunCalc from 'suncalc';
+import * as SunCalc from 'suncalc';
 
 export default function Index() {
   const [Startquery, setStartQuery] = useState('');
@@ -290,6 +290,7 @@ export default function Index() {
         : regioncam;
 
     const times = SunCalc.getTimes(new Date(), coords.latitude, coords.longitude);
+
     const now = new Date();
     return now >= times.sunrise && now < times.sunset;
   }, [markerCoord, markerCoord1, regioncam]);
