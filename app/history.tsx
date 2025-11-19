@@ -1,11 +1,28 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function History() {
-  const history = [
-    { from: 'Hodonín', to: 'Brno' },
-    { from: 'Praha', to: 'Ostrava' },
-    { from: 'Zlín', to: 'Olomouc' },
-  ];
+  const [history, setHistory] = useState<Array<{ from: string; to: string; timestamp: number }>>([]);
+
+  useEffect(() => {
+    const loadHistory = async () =>{
+      try{
+          const stored = await AsyncStorage.getItem('@history');
+          if (stored) {
+          setHistory(JSON.parse(stored));
+        }else{
+          setHistory([]);
+        }
+      }catch(err){
+        console.error('load error', err);
+      }
+    };
+    loadHistory()
+  }, []);
+
+
+
 
   return (
     <View style={styles.container}>

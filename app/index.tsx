@@ -1,8 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as SunCalc from 'suncalc';
+
+
 
 export default function Index() {
   const [Startquery, setStartQuery] = useState('');
@@ -166,7 +169,32 @@ export default function Index() {
     })();
   }, []);
 
+
+
+async function saveRoute(rawFrom: string, rawTo: string) {
+  const from = rawFrom.trim();
+  const to = rawTo.trim();
+  if (!from || !to) {
+    return;
+  }
+
+  try {
+    const stored = await AsyncStorage.getItem('@history');
+    const parsed = stored ? JSON.parse(stored) : [];
+    const newEntry = { from, to, timestamp: Date.now() };
+    const updated = [newEntry, ...parsed].slice(0, 20);
+    await AsyncStorage.setItem('@history', JSON.stringify(updated));
+  } catch (err) {
+    console.error('save error', err);
+  }
+}
+
+
+
+
   async function handleSearch() {
+    await saveRoute(Startquery, Endquery);
+
     const query = Startquery;
     const query1 = Endquery;
     if (!query.trim() && !query1.trim()) {
@@ -174,6 +202,10 @@ export default function Index() {
     }
     const encoded = encodeURIComponent(query.trim());
     const encoded1 = encodeURIComponent(query1.trim());
+
+
+
+
 
     const url = `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`;
     const url1 = `https://nominatim.openstreetmap.org/search?q=${encoded1}&format=json&limit=1`;
@@ -234,6 +266,8 @@ export default function Index() {
         latitudeDelta: Math.abs(latitude - latitude1) * 1.2 || 0.05,
         longitudeDelta: Math.abs(longitude - longitude1) * 1.4 || 0.05,
       });
+
+
     } catch (error) {
       console.error(error);
     }
