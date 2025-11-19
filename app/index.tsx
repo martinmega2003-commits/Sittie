@@ -344,7 +344,7 @@ export default function Index() {
             setEndQuery(text);
           }}
           onBlur={() => setEndSuggestions([])}
-          placeholder="Cl"
+          placeholder="Cíl"
           placeholderTextColor="#8c929b"
           style={styles.input}
         />
