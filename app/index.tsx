@@ -1,12 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as SunCalc from 'suncalc';
 import UserKolecko from '../components/UserKolecko';
-
-
+import { useTheme } from '../components/theme';
 
 export default function Index() {
   const [Startquery, setStartQuery] = useState('');
@@ -41,8 +40,7 @@ export default function Index() {
 
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; accuracy?: number | null } | null>(null);
 
-
-
+  const { colors } = useTheme();
 
   useEffect(() => {
     const query = Startquery.trim();
@@ -90,7 +88,6 @@ export default function Index() {
     };
   }, [Startquery]);
 
-
   useEffect(() => {
     const query = Endquery.trim();
 
@@ -137,18 +134,16 @@ export default function Index() {
     };
   }, [Endquery]);
 
-
-  async function GPSbuttonHandler(){
-            const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          return;
-        }
-        const position = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = position.coords;
-        setStartQuery("Moje poloha")
-        setMarkerCoord({ latitude, longitude});
-        setUserLocation(position.coords)
-
+  async function GPSbuttonHandler() {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      return;
+    }
+    const position = await Location.getCurrentPositionAsync({});
+    const { latitude, longitude } = position.coords;
+    setStartQuery('Moje poloha');
+    setMarkerCoord({ latitude, longitude });
+    setUserLocation(position.coords);
   }
 
   useEffect(() => {
@@ -171,28 +166,23 @@ export default function Index() {
     })();
   }, []);
 
+  async function saveRoute(rawFrom: string, rawTo: string) {
+    const from = rawFrom.trim();
+    const to = rawTo.trim();
+    if (!from || !to) {
+      return;
+    }
 
-
-async function saveRoute(rawFrom: string, rawTo: string) {
-  const from = rawFrom.trim();
-  const to = rawTo.trim();
-  if (!from || !to) {
-    return;
+    try {
+      const stored = await AsyncStorage.getItem('@history');
+      const parsed = stored ? JSON.parse(stored) : [];
+      const newEntry = { from, to, timestamp: Date.now() };
+      const updated = [newEntry, ...parsed].slice(0, 20);
+      await AsyncStorage.setItem('@history', JSON.stringify(updated));
+    } catch (err) {
+      console.error('save error', err);
+    }
   }
-
-  try {
-    const stored = await AsyncStorage.getItem('@history');
-    const parsed = stored ? JSON.parse(stored) : [];
-    const newEntry = { from, to, timestamp: Date.now() };
-    const updated = [newEntry, ...parsed].slice(0, 20);
-    await AsyncStorage.setItem('@history', JSON.stringify(updated));
-  } catch (err) {
-    console.error('save error', err);
-  }
-}
-
-
-
 
   async function handleSearch() {
     await saveRoute(Startquery, Endquery);
@@ -204,10 +194,6 @@ async function saveRoute(rawFrom: string, rawTo: string) {
     }
     const encoded = encodeURIComponent(query.trim());
     const encoded1 = encodeURIComponent(query1.trim());
-
-
-
-
 
     const url = `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`;
     const url1 = `https://nominatim.openstreetmap.org/search?q=${encoded1}&format=json&limit=1`;
@@ -268,8 +254,6 @@ async function saveRoute(rawFrom: string, rawTo: string) {
         latitudeDelta: Math.abs(latitude - latitude1) * 1.2 || 0.05,
         longitudeDelta: Math.abs(longitude - longitude1) * 1.4 || 0.05,
       });
-
-
     } catch (error) {
       console.error(error);
     }
@@ -309,12 +293,11 @@ async function saveRoute(rawFrom: string, rawTo: string) {
           (markerCoord.longitude + markerCoord1.longitude) / 2,
         )
       : null;
-      
+
   const sunDelta =
     bearing !== null && sunAzimuth !== null
       ? ((sunAzimuth - bearing + 540) % 360) - 180
       : null;
-
 
   const isDay = useMemo(() => {
     const coords =
@@ -332,7 +315,7 @@ async function saveRoute(rawFrom: string, rawTo: string) {
   }, [markerCoord, markerCoord1, regioncam]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]}>
       <View style={styles.content}>
         <View style={styles.inputRow}>
           <TextInput
@@ -343,16 +326,40 @@ async function saveRoute(rawFrom: string, rawTo: string) {
             }}
             onBlur={() => setStartSuggestion([])}
             placeholder="Start"
-            placeholderTextColor="#8c929b"
-            style={[styles.input, styles.inputFlex]}
+            placeholderTextColor={colors.muted}
+            style={[
+              styles.input,
+              styles.inputFlex,
+              {
+                backgroundColor: colors.card,
+                color: colors.text,
+                borderColor: colors.muted,
+              },
+            ]}
           />
-          <Pressable style={styles.gpsButton} onPress={() => {GPSbuttonHandler()}}>
-            <Text style={styles.gpsButtonText}>GPS</Text>
+          <Pressable
+            style={[
+              styles.gpsButton,
+              { backgroundColor: colors.primary },
+            ]}
+            onPress={GPSbuttonHandler}
+          >
+            <Text style={[styles.gpsButtonText, { color: colors.bg }]}>
+              GPS
+            </Text>
           </Pressable>
         </View>
-      
+
         {StartSuggestion.length > 0 && (
-          <View style={styles.suggestionList}>
+          <View
+            style={[
+              styles.suggestionList,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.muted,
+              },
+            ]}
+          >
             {StartSuggestion.map((item: any) => (
               <Pressable
                 key={item.place_id}
@@ -367,7 +374,14 @@ async function saveRoute(rawFrom: string, rawTo: string) {
                 }}
                 style={styles.suggestionItem}
               >
-                <Text style={styles.suggestionText}>{item.display_name}</Text>
+                <Text
+                  style={[
+                    styles.suggestionText,
+                    { color: colors.text },
+                  ]}
+                >
+                  {item.display_name}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -381,12 +395,27 @@ async function saveRoute(rawFrom: string, rawTo: string) {
           }}
           onBlur={() => setEndSuggestions([])}
           placeholder="Cíl"
-          placeholderTextColor="#8c929b"
-          style={styles.input}
+          placeholderTextColor={colors.muted}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.card,
+              color: colors.text,
+              borderColor: colors.muted,
+            },
+          ]}
         />
 
-         {endSuggestions.length > 0 && (
-          <View style={styles.suggestionList}>
+        {endSuggestions.length > 0 && (
+          <View
+            style={[
+              styles.suggestionList,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.muted,
+              },
+            ]}
+          >
             {endSuggestions.map((item: any) => (
               <Pressable
                 key={item.place_id}
@@ -401,20 +430,33 @@ async function saveRoute(rawFrom: string, rawTo: string) {
                 }}
                 style={styles.suggestionItem}
               >
-                <Text style={styles.suggestionText}>{item.display_name}</Text>
+                <Text
+                  style={[
+                    styles.suggestionText,
+                    { color: colors.text },
+                  ]}
+                >
+                  {item.display_name}
+                </Text>
               </Pressable>
             ))}
           </View>
         )}
 
-        <Pressable style={styles.button} onPress={handleSearch}>
-          <Text style={styles.buttonText}>Hledat</Text>
+        <Pressable
+          style={[
+            styles.button,
+            { backgroundColor: colors.primary, borderColor: colors.primary },
+          ]}
+          onPress={handleSearch}
+        >
+          <Text style={[styles.buttonText, { color: colors.bg }]}>
+            Hledat
+          </Text>
         </Pressable>
 
         <MapView style={styles.map} region={regioncam}>
-          {userLocation && (
-            <UserKolecko coords={userLocation} />
-          )}
+          {userLocation && <UserKolecko coords={userLocation} />}
           {markerCoord && <Marker coordinate={markerCoord} title="Start" />}
           {markerCoord1 && <Marker coordinate={markerCoord1} title="Cíl" />}
           {markerCoord && markerCoord1 && (
@@ -425,23 +467,67 @@ async function saveRoute(rawFrom: string, rawTo: string) {
             />
           )}
         </MapView>
+{sunDelta !== null && (
+  isDay ? (
+    <Text
+      style={[
+        styles.sednisi,
+        { color: colors.text },
+      ]}
+    >
+      Sedni si na {sunDelta > 0 ? 'napravo' : 'nalevo'} (
+      {Math.abs(sunDelta).toFixed(0)}°)
+    </Text>
+  ) : (
+    <Text
+      style={[
+        styles.sednisi,
+        { color: colors.text },
+      ]}
+    >
+      Je noc ale sedni si {sunDelta > 0 ? 'napravo' : 'nalevo'}
+    </Text>
+  )
+)}
+
+
+
 
         {bearing !== null && (
-          <Text style={styles.bearingText}>
+          <Text
+            style={[
+              styles.bearingText,
+              { color: colors.text },
+            ]}
+          >
             Směr trasy: {bearing.toFixed(2)}°
           </Text>
         )}
-        {sunDelta !== null && (
-          <Text style={styles.bearingText}>
+
+          {sunDelta !== null && (
+          <Text
+            style={[
+              styles.bearingText,
+              { color: colors.text },
+            ]}
+          >
             Slunce je {sunDelta > 0 ? 'napravo' : 'nalevo'} (
             {Math.abs(sunDelta).toFixed(0)}°)
           </Text>
+          
         )}
-      <Text style={styles.bearingText}>
-        Je {isDay ? 'den' : 'noc'}
-      </Text>
+        
+        <Text
+        
+          style={[
+            styles.bearingText,
+            { color: colors.text },
+          ]}
+        >
+          Je {isDay ? 'den' : 'noc'}
+        </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -457,7 +543,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingTop: 96,
     paddingBottom: 24,
-    backgroundColor: '#f3f4f6',
   },
   content: {
     flex: 1,
@@ -466,42 +551,33 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     alignSelf: 'center',
   },
-
   map: {
     flex: 1,
     borderRadius: 20,
     overflow: 'hidden',
     minHeight: 420,
   },
-
   button: {
     alignSelf: 'center',
     marginTop: 8,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 12,
-    backgroundColor: '#111827',
     borderWidth: 1,
-    borderColor: '#111827',
   },
   buttonText: {
-    color: '#fff',
     fontWeight: '600',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
-
   input: {
     width: '90%',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#d5dae2',
     marginHorizontal: 20,
     paddingHorizontal: 18,
     paddingVertical: 14,
-    backgroundColor: '#fff',
     fontSize: 16,
-    color: '#111827',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -515,8 +591,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -530,7 +604,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   suggestionText: {
-    color: '#111827',
     fontSize: 14,
   },
   bearingText: {
@@ -538,9 +611,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
   },
-  inputRow: {
+sednisi: {
+  textAlign: 'center',
+  fontSize: 48,
+  fontWeight: '800',
+  letterSpacing: 2,
+  textTransform: 'uppercase',
+  
+  color: '#1a1a1a',
+
+  shadowColor: '#000',
+  shadowOpacity: 0.25,
+  shadowRadius: 12,
+  shadowOffset: { width: 0, height: 4 },
+
+  // jemné zaoblení textového boxu (pokud je aplikovatelné)
+},
+
+  inputRow:{
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -555,10 +644,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: '#111827',
   },
   gpsButtonText: {
-    color: '#fff',
     fontWeight: '600',
     letterSpacing: 0.5,
   },
