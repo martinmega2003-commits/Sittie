@@ -1,31 +1,37 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function History() {
   const [history, setHistory] = useState<Array<{ from: string; to: string; timestamp: number }>>([]);
 
-  useEffect(() => {
+
+useFocusEffect(
+  useCallback(() => {
+    let isActive = true;
     const loadHistory = async () =>{
       try{
           const stored = await AsyncStorage.getItem('@history');
           if (stored) {
           setHistory(JSON.parse(stored));
-        }else{
-          setHistory([]);
-        }
-      }catch(err){
-        console.error('load error', err);
       }
+    } catch(err){
+              console.error('load error', err);
+    }
+  };
+    loadHistory();
+    return () => {
+      isActive = false;
     };
-    loadHistory()
-  }, []);
+  }, []),
+);
 
 
 
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.heading}>Historie vyhledávání</Text>
 
       <View style={styles.list}>
@@ -37,7 +43,7 @@ export default function History() {
           </View>
         ))}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
