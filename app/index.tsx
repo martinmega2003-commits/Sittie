@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as SunCalc from 'suncalc';
+import UserKolecko from '../components/UserKolecko';
 
 
 
@@ -38,8 +39,8 @@ export default function Index() {
   const startSelectionRef = useRef(false);
   const endSelectionRef = useRef(false);
 
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; accuracy?: number | null } | null>(null);
 
- 
 
 
 
@@ -139,15 +140,14 @@ export default function Index() {
 
   async function GPSbuttonHandler(){
             const { status } = await Location.requestForegroundPermissionsAsync();
-            
         if (status !== 'granted') {
           return;
         }
-        
         const position = await Location.getCurrentPositionAsync({});
         const { latitude, longitude } = position.coords;
         setStartQuery("Moje poloha")
         setMarkerCoord({ latitude, longitude});
+        setUserLocation(position.coords)
 
   }
 
@@ -160,6 +160,8 @@ export default function Index() {
         }
 
         const position = await Location.getCurrentPositionAsync({});
+        setUserLocation(position.coords);
+
         const { latitude, longitude } = position.coords;
 
         setRegioncam({ latitude, longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 });
@@ -410,6 +412,9 @@ async function saveRoute(rawFrom: string, rawTo: string) {
         </Pressable>
 
         <MapView style={styles.map} region={regioncam}>
+          {userLocation && (
+            <UserKolecko coords={userLocation} />
+          )}
           {markerCoord && <Marker coordinate={markerCoord} title="Start" />}
           {markerCoord1 && <Marker coordinate={markerCoord1} title="Cíl" />}
           {markerCoord && markerCoord1 && (
