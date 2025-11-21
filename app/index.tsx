@@ -44,13 +44,13 @@ export default function Index() {
 
   useEffect(() => {
     const query = Startquery.trim();
-
+    //když vyberu tak mne to hodí prázdé vyhledávání
     if (startSelectionRef.current) {
       startSelectionRef.current = false;
       setStartSuggestion([]);
       return;
     }
-
+//když napisu vice jak 3 znaky
     if (query.length < 3) {
       setStartSuggestion([]);
       return;
@@ -58,6 +58,7 @@ export default function Index() {
 
     let isActive = true;
 
+    //ziskam data z api vyhledavani
     const handle = setTimeout(async () => {
       try {
         const resp = await fetch(
@@ -76,7 +77,7 @@ export default function Index() {
           return;
         }
 
-        setStartSuggestion(data);
+      setStartSuggestion(data);
       } catch (error) {
         console.error('Start auto-complete failed', error);
       }
@@ -174,10 +175,10 @@ export default function Index() {
     }
 
     try {
-      const stored = await AsyncStorage.getItem('@history');
+      const stored = await AsyncStorage.getItem('@history');  //vezme data z histry
       const parsed = stored ? JSON.parse(stored) : [];
       const newEntry = { from, to, timestamp: Date.now() };
-      const updated = [newEntry, ...parsed].slice(0, 20);
+      const updated = [newEntry, ...parsed].slice(0, 20);   //20 poslednich zaznamu
       await AsyncStorage.setItem('@history', JSON.stringify(updated));
     } catch (err) {
       console.error('save error', err);
@@ -315,7 +316,7 @@ export default function Index() {
   }, [markerCoord, markerCoord1, regioncam]);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} keyboardShouldPersistTaps="always">
       <View style={styles.content}>
         <View style={styles.inputRow}>
           <TextInput
@@ -337,7 +338,8 @@ export default function Index() {
               },
             ]}
           />
-          <Pressable
+          
+          <Pressable    //gps Butoon
             style={[
               styles.gpsButton,
               { backgroundColor: colors.primary },
@@ -350,7 +352,7 @@ export default function Index() {
           </Pressable>
         </View>
 
-        {StartSuggestion.length > 0 && (
+        {StartSuggestion.length > 0 && ( //navrh
           <View
             style={[
               styles.suggestionList,
@@ -371,6 +373,7 @@ export default function Index() {
                     longitude: parseFloat(item.lon),
                   });
                   setStartSuggestion([]);
+                  
                 }}
                 style={styles.suggestionItem}
               >
@@ -625,8 +628,6 @@ sednisi: {
   shadowOpacity: 0.25,
   shadowRadius: 12,
   shadowOffset: { width: 0, height: 4 },
-
-  // jemné zaoblení textového boxu (pokud je aplikovatelné)
 },
 
   inputRow:{

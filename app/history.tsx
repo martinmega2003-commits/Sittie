@@ -52,7 +52,7 @@ export default function History() {
               styles.historyItem,
               {
                 backgroundColor: colors.card,
-                shadowColor: '#000', // můžeš nechat, nebo ubrat pro dark
+                shadowColor: '#000', 
               },
             ]}
           >
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    paddingTop: 100,   // ✅ místo marginTop
+    paddingTop: 100,   
     gap: 16,
   },
   heading: {
