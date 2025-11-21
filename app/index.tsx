@@ -488,13 +488,10 @@ export default function Index() {
         { color: colors.text },
       ]}
     >
-      Je noc ale sedni si {sunDelta > 0 ? 'napravo' : 'nalevo'}
+      Je noc {sunDelta > 0 ? 'napravo' : 'nalevo'}
     </Text>
   )
 )}
-
-
-
 
         {bearing !== null && (
           <Text
