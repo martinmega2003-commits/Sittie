@@ -1,50 +1,51 @@
-# Welcome to your Expo app 👋
+# Sittie
+Mobilní Expo aplikace, která ti pomůže zjistit, na které straně trasy máš sedět, aby ti (ne)svítilo slunce. Vyhledá start i cíl přes OpenStreetMap, vykreslí trasu na mapě, spočítá azimut slunce a uloží poslední dotazy do historie. 
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Funkce
+- Vyhledání startu/cíle s našeptávačem (Nominatim OpenStreetMap).
+- GPS tlačítko pro rychlé nastavení „Moje poloha“.
+- Mapový náhled s markery, polyline a automatickým zarámováním trasy.
+- Výpočet směru trasy a rozdílu proti azimutu slunce: textově řekne, zda sedět nalevo/napravo a jestli je den nebo noc.
+- Lokální historie posledních 20 hledání (AsyncStorage).
+- Přepínač světlý/tmavý režim a vymazání historie s potvrzením.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+## Rychlý start
+1) Nainstaluj závislosti  
 ```bash
-npm run reset-project
+npm install
 ```
+2) Spusť vývojový server  
+```bash
+npx expo start
+```
+3) Otevři aplikaci v Expo Go (telefon), emulátoru nebo simulátoru dle nabídky v konzoli.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Požadavky
+- Node.js 18+ a npm
+- [Expo CLI](https://docs.expo.dev/get-started/installation/) (automaticky při `npx expo start`)
+- Mobil s podporou Expo Go nebo nastavený emulátor/simulátor
+- Povolení přístupu k poloze pro funkci GPS
 
-## Learn more
+## Architektura
+- `app/index.tsx` – hlavní obrazovka: vyhledávání, mapa, výpočet azimutu slunce vs. směr trasy.
+- `app/history.tsx` – seznam posledních 20 hledání uložených v `@history` (AsyncStorage).
+- `app/settings.tsx` – přepnutí dark/light theme, mazání historie s potvrzením.
+- `components/theme.tsx` – ThemeProvider, perzistence v `@theme`.
+- `components/UserKolecko.tsx` – vizualizace aktuální polohy uživatele na mapě.
 
-To learn more about developing your project with Expo, look at the following resources:
+## API a data
+- Geokódování: veřejné rozhraní Nominatim (OpenStreetMap) – vyžaduje připojení k internetu. V dotazech se posílá hlavička `User-Agent`.
+- Astronomie: balíček `suncalc` pro výpočet polohy slunce.
+- Ukládání: `@react-native-async-storage/async-storage` pro historii a téma.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Skripty npm
+- `npm start` – spustí Metro bundler / Expo DevTools.
+- `npm run android` / `npm run ios` – build + spuštění na emulátoru (po nastavení prostředí).
+- `npm run web` – webová verze.
+- `npm run lint` – ESLint kontrola.
 
-## Join the community
+## Poznámky
+- Aplikace je demonstrativní: neprovádí routing ani přesné plánování tras, jen spojí dva body a vyhodnotí polohu slunce vůči přímé linii.
+- Historie a téma zůstávají lokálně na zařízení; nic se neposílá na vlastní servery.  
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Potřebuješ doplnit anglickou verzi nebo build instrukce pro produkci? 
